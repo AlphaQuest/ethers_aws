@@ -7,5 +7,15 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.74"
+aws-config = "1.1.1"
+aws-sdk-kms = "1.7.0"
 ethers = "2.0.11"
+hex = "0.4.3"
+log = "0.4.20"
+num-bigint = "0.4.4"
+rasn = "0.12.4"
+rasn-pkix = "0.12.4"
+reqwest = "0.11.22"
 thiserror = "1.0.50"
+tokio = { version = "1.35.0", features = ["full"] }
+x509-certificate = "0.23.1"
