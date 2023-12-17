@@ -86,8 +86,8 @@ impl AWSSigner {
                 ))?
                 .as_ref(),
         )?;
-        let mut eth_signature = correct_s_for_malleability(eth_signature)?;
-        correct_eth_sig_r_value(&mut eth_signature, hash, self.address)?;
+        let eth_signature = correct_s_for_malleability(eth_signature)?;
+        let eth_signature = correct_eth_sig_r_value(eth_signature, hash, self.address)?;
         Ok(eth_signature)
     }
 }
@@ -193,17 +193,18 @@ fn correct_s_for_malleability(signature: Signature) -> Result<Signature, AWSSign
  * Using the signature and message, the ethereum address is recovered. If the ethereum address recovered is different from the signer's address, a value of 28 is used.
  */
 fn correct_eth_sig_r_value<S: Send + Sync + AsRef<[u8]>>(
-    signature: &mut Signature,
+    signature: Signature,
     message: S,
     signer_address: Address,
-) -> Result<(), AWSSignerError> {
+) -> Result<Signature, AWSSignerError> {
+    let mut new_singature = signature;
     let recovered_address = signature
         .recover(message.as_ref())
         .map_err(|err| AWSSignerError::SignatureError(err))?;
     if recovered_address != signer_address {
-        signature.v = 28
+        new_singature.v = 28
     }
-    Ok(())
+    Ok(new_singature)
 }
 
 #[async_trait]
@@ -319,8 +320,8 @@ mod tests {
             .unwrap(),
             v: 27,
         };
-        let mut eth_signature = correct_s_for_malleability(eth_signature).unwrap();
-        correct_eth_sig_r_value(&mut eth_signature, message_hash, signer).unwrap();
+        let eth_signature = correct_s_for_malleability(eth_signature).unwrap();
+        let eth_signature = correct_eth_sig_r_value(eth_signature, message_hash, signer).unwrap();
         let recovered_address = eth_signature.recover(message_hash).unwrap();
         assert_eq!(signer, recovered_address);
     }
