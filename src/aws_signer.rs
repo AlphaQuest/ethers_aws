@@ -13,7 +13,7 @@ use ethers::{
     signers::Signer,
     types::{
         transaction::{eip2718::TypedTransaction, eip712::Eip712},
-        Address, Signature, H256, U256,
+        Address, RecoveryMessage, Signature, H256, U256,
     },
     utils::{hash_message, keccak256},
 };
@@ -192,14 +192,14 @@ fn correct_s_for_malleability(signature: Signature) -> Result<Signature, AWSSign
  * This function checks if the default v value (27) is valid.
  * Using the signature and message, the ethereum address is recovered. If the ethereum address recovered is different from the signer's address, a value of 28 is used.
  */
-fn correct_eth_sig_r_value<S: Send + Sync + AsRef<[u8]>>(
+fn correct_eth_sig_r_value<S: Send + Sync + Into<RecoveryMessage>>(
     signature: Signature,
     message: S,
     signer_address: Address,
 ) -> Result<Signature, AWSSignerError> {
     let mut new_singature = signature;
     let recovered_address = signature
-        .recover(message.as_ref())
+        .recover(message)
         .map_err(|err| AWSSignerError::SignatureError(err))?;
     if recovered_address != signer_address {
         new_singature.v = 28
@@ -262,9 +262,6 @@ mod tests {
         types::{Address, Signature, U256},
         utils::{hash_message, keccak256},
     };
-    use num_bigint::BigInt;
-
-    use crate::aws_signer::decode_der_signature;
 
     use super::{
         compute_ethereum_address_from_decoded_der, correct_eth_sig_r_value,
@@ -294,10 +291,9 @@ mod tests {
             .await
             .unwrap();
 
-        let message = "hello World!";
-        let message_hash = hash_message(message);
+        let message = "Hello World";
         let sig = signer.sign_message(message).await.unwrap();
-        let recovred_address = sig.recover(message_hash).unwrap();
+        let recovred_address = sig.recover(message).unwrap();
         assert_eq!(recovred_address, signer.address);
     }
     #[test]
