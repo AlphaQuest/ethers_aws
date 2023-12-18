@@ -10,7 +10,7 @@ use ethers::{
         elliptic_curve::{generic_array::GenericArray, PrimeField},
         Scalar,
     },
-    signers::Signer,
+    signers::{to_eip155_v, Signer},
     types::{
         transaction::{eip2718::TypedTransaction, eip712::Eip712},
         Address, RecoveryMessage, Signature, H256, U256,
@@ -40,6 +40,9 @@ pub struct AWSSigner {
 }
 
 impl AWSSigner {
+    /**
+     * Creates a new AWSSigner
+     */
     pub async fn new(
         chain_id: u64,
         access_key: String,
@@ -69,7 +72,8 @@ impl AWSSigner {
         })
     }
 
-    pub async fn sign_hash(&self, hash: H256) -> Result<Signature, AWSSignerError> {
+    // Sign the hash of the message
+    async fn sign_hash(&self, hash: H256) -> Result<Signature, AWSSignerError> {
         let eth_signature = decode_der_signature(
             self.client
                 .sign()
@@ -89,6 +93,26 @@ impl AWSSigner {
         let eth_signature = correct_s_for_malleability(eth_signature)?;
         let eth_signature = correct_eth_sig_r_value(eth_signature, hash, self.address)?;
         Ok(eth_signature)
+    }
+
+    /// Synchronously signs the provided transaction, normalizing the signature `v` value with
+    /// EIP-155 using the transaction's `chain_id`, or the signer's `chain_id` if the transaction
+    /// does not specify one.
+    async fn sign_transaction_async(
+        &self,
+        tx: &TypedTransaction,
+    ) -> Result<Signature, AWSSignerError> {
+        // rlp (for sighash) must have the same chain id as v in the signature
+        let chain_id = tx.chain_id().map(|id| id.as_u64()).unwrap_or(self.chain_id);
+        let mut tx = tx.clone();
+        tx.set_chain_id(chain_id);
+
+        let sighash = tx.sighash();
+        let mut sig = self.sign_hash(sighash).await?;
+
+        // sign_hash sets `v` to recid + 27, so we need to subtract 27 before normalizing
+        sig.v = to_eip155_v(sig.v as u8 - 27, chain_id);
+        Ok(sig)
     }
 }
 
@@ -211,8 +235,13 @@ fn correct_eth_sig_r_value<S: Send + Sync + Into<RecoveryMessage>>(
 #[async_trait]
 impl Signer for AWSSigner {
     type Error = AWSSignerError;
-    async fn sign_transaction(&self, message: &TypedTransaction) -> Result<Signature, Self::Error> {
-        todo!()
+    async fn sign_transaction(&self, tx: &TypedTransaction) -> Result<Signature, Self::Error> {
+        let mut tx_with_chain = tx.clone();
+        if tx_with_chain.chain_id().is_none() {
+            // in the case we don't have a chain_id, let's use the signer chain id instead
+            tx_with_chain.set_chain_id(self.chain_id);
+        }
+        self.sign_transaction_async(&tx_with_chain).await
     }
     async fn sign_message<S: Send + Sync + AsRef<[u8]>>(
         &self,
@@ -229,7 +258,10 @@ impl Signer for AWSSigner {
         &self,
         payload: &T,
     ) -> Result<Signature, Self::Error> {
-        todo!()
+        let encoded = payload
+            .encode_eip712()
+            .map_err(|e| Self::Error::Eip712Error(e.to_string()))?;
+        self.sign_hash(H256::from(encoded)).await
     }
 
     /// Returns the signer's Ethereum Address
@@ -256,12 +288,11 @@ impl Signer for AWSSigner {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
 
     use ethers::{
         signers::Signer,
         types::{Address, Signature, U256},
-        utils::{hash_message, keccak256},
+        utils::keccak256,
     };
 
     use super::{

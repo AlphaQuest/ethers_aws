@@ -1,4 +1,3 @@
-use aws_sdk_kms::error::SdkError;
 use ethers::types::SignatureError;
 use thiserror::Error;
 
@@ -20,4 +19,6 @@ pub enum AWSSignerError {
     SignatureError(SignatureError),
     #[error("Failed to normalize generated S")]
     NormalizeFailure,
+    #[error("Failed to genere typed data")]
+    Eip712Error(String),
 }
