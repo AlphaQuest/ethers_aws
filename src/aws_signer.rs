@@ -172,6 +172,7 @@ fn correct_s_for_malleability(signature: Signature) -> Result<Signature, AWSSign
     let half_n: U256 = SECP256K1_N.div(U256::from(2));
     let mut new_signature = signature;
     if signature.s.gt(&SECP256K1_N) {
+        println!("negate");
         //Normalize
         //https://ethereum.stackexchange.com/questions/65893/what-should-we-do-if-s-in-the-ecdsa-signature-is-greater-than-n-2
         let mut bytes = [0u8; 32];
@@ -183,11 +184,11 @@ fn correct_s_for_malleability(signature: Signature) -> Result<Signature, AWSSign
         };
         new_signature.s = U256::from_big_endian(&scalar.to_bytes());
     } else if signature.s.gt(&half_n) && signature.s.lt(&SECP256K1_N) {
+        println!("subtract");
         new_signature.s = SECP256K1_N.sub(signature.s);
     }
     Ok(new_signature)
 }
-// 0xeb74b685a3900eae809230b9bcffa430016f64b4
 /**
  * This function checks if the default v value (27) is valid.
  * Using the signature and message, the ethereum address is recovered. If the ethereum address recovered is different from the signer's address, a value of 28 is used.
