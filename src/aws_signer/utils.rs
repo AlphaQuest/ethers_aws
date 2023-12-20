@@ -70,10 +70,10 @@ pub fn decode_der_signature(signature: &[u8]) -> Result<Signature, AWSSignerErro
     // https://crypto.stackexchange.com/questions/1795/how-can-i-convert-a-der-ecdsa-signature-to-asn-1
     // 0x30 b1 0x02 b2 (vr) 0x02 b3 (vs)
     let r_len: usize = signature[3] as usize;
-    let r_start_index = 4 as usize;
+    let r_start_index = 4_usize;
     let r_final_index = r_start_index + r_len;
 
-    let s_len = signature[r_final_index as usize + 1] as usize;
+    let s_len = signature[r_final_index + 1] as usize;
     let s_start_index = r_final_index + 2;
     let s_last_index = s_start_index + s_len;
 
@@ -131,7 +131,7 @@ pub fn correct_eth_sig_r_value<S: Send + Sync + Into<RecoveryMessage>>(
     let mut new_singature = signature;
     let recovered_address = signature
         .recover(message)
-        .map_err(|err| AWSSignerError::SignatureError(err))?;
+        .map_err(AWSSignerError::SignatureError)?;
     if recovered_address != signer_address {
         new_singature.v = 28
     }

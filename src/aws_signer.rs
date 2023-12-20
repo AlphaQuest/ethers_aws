@@ -164,7 +164,7 @@ impl Signer for AWSSigner {
 mod tests {
 
     use ethers::signers::Signer;
-    use ethers::types::{Eip1559TransactionRequest, TransactionRequest, U256};
+    use ethers::types::{Eip1559TransactionRequest, U256};
     use ethers::utils::parse_units;
 
     use super::AWSSigner;
@@ -217,7 +217,7 @@ mod tests {
                 .max_priority_fee_per_gas(U256::from(1000000000))
                 .chain_id(signer.chain_id),
         );
-        let signature = signer.sign_transaction(&tx).await.unwrap();
+        let signature = signer.sign_transaction(tx).await.unwrap();
         assert_ne!(signature.v, 27);
         assert_ne!(signature.v, 28);
         let recovered_address = signature.recover(tx.sighash()).unwrap();
