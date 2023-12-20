@@ -28,6 +28,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
 
 [[package]]
+name = "advanced_example"
+version = "0.1.0"
+
+[[package]]
 name = "aes"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1364,25 +1368,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ethers-rs-aws"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "aws-config",
- "aws-sdk-kms",
- "ethers",
- "hex",
- "log",
- "num-bigint",
- "rasn",
- "rasn-pkix",
- "reqwest",
- "thiserror",
- "tokio",
- "x509-certificate",
-]
-
-[[package]]
 name = "ethers-signers"
 version = "2.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1431,6 +1416,25 @@ dependencies = [
  "tracing",
  "walkdir",
  "yansi",
+]
+
+[[package]]
+name = "ethers_aws"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "aws-config",
+ "aws-sdk-kms",
+ "ethers",
+ "hex",
+ "log",
+ "num-bigint",
+ "rasn",
+ "rasn-pkix",
+ "reqwest",
+ "thiserror",
+ "tokio",
+ "x509-certificate",
 ]
 
 [[package]]
@@ -3400,6 +3404,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "simple_example"
+version = "0.1.0"
+dependencies = [
+ "ethers",
+ "ethers_aws",
+ "tokio",
+]
+
+[[package]]
 name = "siphasher"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3714,9 +3727,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.35.0"
+version = "1.35.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "841d45b238a16291a4e1584e61820b8ae57d696cc5015c459c229ccc6990cc1c"
+checksum = "c89b4efa943be685f629b149f53829423f8f5531ea21249408e8e2f8671ec104"
 dependencies = [
  "backtrace",
  "bytes",

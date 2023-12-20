@@ -1,9 +1,19 @@
 # AWSSigner
 
 ether_aws is a wrapper around the aws sdk that allows using AWS KMS as a signer, `AWSSigner`
-
 `AWSSigner` fully implements the `Signer` trait from ether-rs. 
 
+# Quickstart
+Add this to your Cargo.toml:
+```
+[dependencies]
+ethers_aws = "0.1"
+```
+# Usage
+```
+
+
+```
 
 # AWS setup (Optional)
 ## Create an IAM user

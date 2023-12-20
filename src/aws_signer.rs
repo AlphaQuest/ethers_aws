@@ -54,6 +54,7 @@ impl AWSSigner {
             .await;
         let client = Client::new(&shared_config);
         let address = get_ethereum_address(&client, &key_id).await?;
+        log::debug!("AWS Signer created. Address {:?}", address);
         Ok(Self {
             client,
             address,
