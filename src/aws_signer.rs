@@ -164,6 +164,8 @@ impl Signer for AWSSigner {
 mod tests {
 
     use ethers::signers::Signer;
+    use ethers::types::{Eip1559TransactionRequest, TransactionRequest, U256};
+    use ethers::utils::parse_units;
 
     use super::AWSSigner;
 
@@ -194,5 +196,31 @@ mod tests {
         let sig = signer.sign_message(message).await.unwrap();
         let recovred_address = sig.recover(message).unwrap();
         assert_eq!(recovred_address, signer.address);
+    }
+    #[tokio::test]
+    async fn test_sign_typed_transaction() {
+        let access_key = std::env::var("ACCESS_KEY").expect("ACCESS_KEY must be in environment");
+        let secret_access_key =
+            std::env::var("SECRET_ACCESS_KEY").expect("SECRET_ACCESS_KEY must be in environment");
+        let key_id: String = std::env::var("KEY_ID").expect("KEY_ID must be in environment");
+        let region = std::env::var("REGION").expect("REGION must be in environment");
+        let signer = AWSSigner::new(1, access_key, secret_access_key, key_id, region)
+            .await
+            .unwrap();
+
+        let tx = &ethers::types::transaction::eip2718::TypedTransaction::Eip1559(
+            Eip1559TransactionRequest::new()
+                .to("vitalik.eth")
+                .value(parse_units(1, 18).unwrap())
+                .nonce(1)
+                .gas(21000)
+                .max_priority_fee_per_gas(U256::from(1000000000))
+                .chain_id(signer.chain_id),
+        );
+        let signature = signer.sign_transaction(&tx).await.unwrap();
+        assert_ne!(signature.v, 27);
+        assert_ne!(signature.v, 28);
+        let recovered_address = signature.recover(tx.sighash()).unwrap();
+        assert_eq!(signer.address(), recovered_address);
     }
 }
