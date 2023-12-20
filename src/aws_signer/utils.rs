@@ -18,10 +18,10 @@ use super::aws_signer_error::{self, AWSSignerError};
  * The maximum N value of the SECP256K1 curve
  */
 const SECP256K1_N: U256 = U256([
-    0xffffffffffffffff,
-    0xfffffffffffffffe,
-    0xbaaedce6af48a03b,
-    0xbfd25e8cd0364141,
+    13822214165235122497, // First 8 bytes
+    13451932020343611451, // Next 8 bytes
+    18446744073709551614, // Next 8 bytes
+    18446744073709551615, // Last 8 bytes
 ]);
 
 pub async fn get_ethereum_address(
@@ -104,7 +104,6 @@ pub fn correct_s_for_malleability(signature: Signature) -> Result<Signature, AWS
     let half_n: U256 = SECP256K1_N.div(U256::from(2));
     let mut new_signature = signature;
     if signature.s.gt(&SECP256K1_N) {
-        println!("negate");
         //Normalize
         //https://ethereum.stackexchange.com/questions/65893/what-should-we-do-if-s-in-the-ecdsa-signature-is-greater-than-n-2
         let mut bytes = [0u8; 32];
@@ -116,7 +115,6 @@ pub fn correct_s_for_malleability(signature: Signature) -> Result<Signature, AWS
         };
         new_signature.s = U256::from_big_endian(&scalar.to_bytes());
     } else if signature.s.gt(&half_n) && signature.s.lt(&SECP256K1_N) {
-        println!("subtract");
         new_signature.s = SECP256K1_N.sub(signature.s);
     }
     Ok(new_signature)
