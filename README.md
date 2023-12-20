@@ -11,7 +11,29 @@ ethers_aws = "0.1"
 ```
 # Usage
 ```
+//Set up all credentials
+let access_key = std::env::var("ACCESS_KEY").expect("ACCESS_KEY must be in environment");
+let secret_access_key = std::env::var("SECRET_ACCESS_KEY").expect("SECRET_ACCESS_KEY must be in environment");
+let key_id: String = std::env::var("KEY_ID").expect("KEY_ID must be in environment");
+let region = std::env::var("REGION").expect("REGION must be in environment");
+//Create the signer
+let aws_signer = AWSSigner::new(
+        ethers::types::Chain::Mainnet as u64,
+        access_key,
+        secret_access_key,
+        key_id,
+        region,
+    )
+    .await
+    .expect("Cannot create AWS signer");
+let provider = Provider::<Http>::try_from(anvil.endpoint()).unwrap();
+let signer_middleware = SignerMiddleware::new(provider, aws_signer);
 
+//Create transaction as usual
+let one_ether: U256 = parse_units(1, 18 as i32).unwrap().into();
+let tx_request = Eip1559TransactionRequest::new().to(Address::zero())
+        .value(one_ether);
+let response = signer_middleware.send_transaction(tx_request, None)
 
 ```
 
