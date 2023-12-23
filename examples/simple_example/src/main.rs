@@ -76,6 +76,7 @@ async fn add_eth_to_aws_address(anvil: AnvilInstance, aws_address: Address) -> A
 fn setup_anvil() -> AnvilInstance {
     //Setup anvil with the same chain id
     let anvil = Anvil::new()
+        .fork("https://1rpc.io/eth")
         .arg("--balance=100000")
         .arg("--chain-id=1")
         .spawn();
