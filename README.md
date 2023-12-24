@@ -62,9 +62,18 @@ cargo add ethers_aws
 ```
 
 
-
 # Example
+You can run the simple example provided in this project
 ```
 use ethers_aws::AWSSigner
 let aws_signer = AWSSigner::new();
+```
+
+# Tests
+Unit tests require KMS credentials to be set. Please set these values in your environment.
+```
+export ACCESS_KEY=<ACCESS_KEY>
+eexport SECRET_ACCESS_KEY=<SECRET_ACCESS_KEY>
+export KEY_ID=<KEY_ID>
+export REGION=<REGION<
 ```
